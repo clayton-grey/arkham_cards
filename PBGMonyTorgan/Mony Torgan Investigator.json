@@ -17,15 +17,15 @@
   "XmlUI": "",
   "ObjectStates": [
     {
-      "GUID": "13abab",
+      "GUID": "569c06",
       "Name": "Custom_Model_Bag",
       "Transform": {
         "posX": 61.90733,
-        "posY": 1.4814961,
+        "posY": 1.48149908,
         "posZ": 34.0560036,
-        "rotX": 1.03050945E-06,
+        "rotX": -1.14708385E-07,
         "rotY": 270.0296,
-        "rotZ": -1.20994173E-06,
+        "rotZ": -3.79330274E-08,
         "scaleX": 2.21,
         "scaleY": 0.46,
         "scaleZ": 2.42
