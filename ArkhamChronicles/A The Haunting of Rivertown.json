@@ -1,0 +1,3690 @@
+{
+  "SaveName": "",
+  "Date": "",
+  "VersionNumber": "",
+  "GameMode": "",
+  "GameType": "",
+  "GameComplexity": "",
+  "Tags": [],
+  "Gravity": 0.5,
+  "PlayArea": 0.5,
+  "Table": "",
+  "Sky": "",
+  "Note": "",
+  "TabStates": {},
+  "LuaScript": "",
+  "LuaScriptState": "",
+  "XmlUI": "",
+  "ObjectStates": [
+    {
+      "GUID": "6e5f8f",
+      "Name": "Custom_Model_Bag",
+      "Transform": {
+        "posX": 12.2514477,
+        "posY": 1.481549,
+        "posZ": 11.9856558,
+        "rotX": -3.91837517E-07,
+        "rotY": 270.075623,
+        "rotZ": 3.4767826E-08,
+        "scaleX": 2.21,
+        "scaleY": 0.46,
+        "scaleZ": 2.42
+      },
+      "Nickname": "A: The Haunting of Rivertown",
+      "Description": "Arkham Chronicles",
+      "GMNotes": "",
+      "AltLookAngle": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "ColorDiffuse": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "LayoutGroupSortIndex": 0,
+      "Value": 0,
+      "Locked": false,
+      "Grid": true,
+      "Snap": true,
+      "IgnoreFoW": false,
+      "MeasureMovement": false,
+      "DragSelectable": true,
+      "Autoraise": true,
+      "Sticky": true,
+      "Tooltip": true,
+      "GridProjection": false,
+      "HideWhenFaceDown": false,
+      "Hands": false,
+      "MaterialIndex": -1,
+      "MeshIndex": -1,
+      "CustomMesh": {
+        "MeshURL": "https://raw.githubusercontent.com/RobMayer/TTSLibrary/master/advboxes/tuckbox_h_MSH.obj",
+        "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/2038486699957629435/C5718E0C173691DF8D77AA62E441CC0C9028F08C/",
+        "NormalURL": "",
+        "ColliderURL": "",
+        "Convex": true,
+        "MaterialIndex": 3,
+        "TypeIndex": 6,
+        "CustomShader": {
+          "SpecularColor": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "SpecularIntensity": 0.0,
+          "SpecularSharpness": 2.0,
+          "FresnelStrength": 0.0
+        },
+        "CastShadows": true
+      },
+      "Bag": {
+        "Order": 0
+      },
+      "LuaScript": "-- Utility memory bag by Directsun\r\n-- Version 2.5.2\r\n-- Fork of Memory Bag 2.0 by MrStump\r\n\r\nfunction updateSave()\r\n    local data_to_save = {[\"ml\"]=memoryList}\r\n    saved_data = JSON.encode(data_to_save)\r\n    self.script_state = saved_data\r\nend\r\n\r\nfunction combineMemoryFromBagsWithin()\r\n  local bagObjList = self.getObjects()\r\n  for _, bagObj in ipairs(bagObjList) do\r\n    local data = bagObj.lua_script_state\r\n      if data ~= nil then\r\n        local j = JSON.decode(data)\r\n        if j ~= nil and j.ml ~= nil then\r\n          for guid, entry in pairs(j.ml) do\r\n            memoryList[guid] = entry\r\n          end\r\n        end\r\n      end\r\n    end\r\nend\r\n\r\nfunction updateMemoryWithMoves()\r\n    memoryList = memoryListBackup\r\n    --get the first transposed object's coordinates\r\n    local obj = getObjectFromGUID(moveGuid)\r\n\r\n    -- p1 is where needs to go, p2 is where it was\r\n    local refObjPos = memoryList[moveGuid].pos\r\n    local deltaPos = findOffsetDistance(obj.getPosition(), refObjPos, nil)\r\n    local movedRotation = obj.getRotation()\r\n    for guid, entry in pairs(memoryList) do\r\n        memoryList[guid].pos.x = entry.pos.x - deltaPos.x\r\n        memoryList[guid].pos.y = entry.pos.y - deltaPos.y\r\n        memoryList[guid].pos.z = entry.pos.z - deltaPos.z\r\n        -- memoryList[guid].rot.x = movedRotation.x\r\n        -- memoryList[guid].rot.y = movedRotation.y\r\n        -- memoryList[guid].rot.z = movedRotation.z\r\n    end\r\n\r\n    --theList[obj.getGUID()] = {\r\n    --    pos={x=round(pos.x,4), y=round(pos.y,4), z=round(pos.z,4)},\r\n    --    rot={x=round(rot.x,4), y=round(rot.y,4), z=round(rot.z,4)},\r\n    --    lock=obj.getLock()\r\n    --}\r\n    moveList = {}\r\nend\r\n\r\nfunction onload(saved_data)\r\n    fresh = true\r\n    if saved_data ~= \"\" then\r\n        local loaded_data = JSON.decode(saved_data)\r\n        --Set up information off of loaded_data\r\n        memoryList = loaded_data.ml\r\n    else\r\n        --Set up information for if there is no saved saved data\r\n        memoryList = {}\r\n    end\r\n\r\n    moveList = {}\r\n    moveGuid = nil\r\n\r\n    if next(memoryList) == nil then\r\n        createSetupButton()\r\n    else\r\n        fresh = false\r\n        createMemoryActionButtons()\r\n    end\r\nend\r\n\r\n\r\n--Beginning Setup\r\n\r\n\r\n--Make setup button\r\nfunction createSetupButton()\r\n    self.createButton({\r\n        label=\"Setup\", click_function=\"buttonClick_setup\", function_owner=self,\r\n        position={0,0.1,-2.1}, rotation={0,0,0}, height=220, width=500,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\nend\r\n\r\n--Triggered by Transpose button\r\nfunction buttonClick_transpose()\r\n    moveGuid = nil\r\n    broadcastToAll(\"Select one object and move it- all objects will move relative to the new location\", {0.75, 0.75, 1})\r\n    memoryListBackup = duplicateTable(memoryList)\r\n    memoryList = {}\r\n    moveList = {}\r\n    self.clearButtons()\r\n    createButtonsOnAllObjects(true)\r\n    createSetupActionButtons(true)\r\nend\r\n\r\n--Triggered by setup button,\r\nfunction buttonClick_setup()\r\n    memoryListBackup = duplicateTable(memoryList)\r\n    memoryList = {}\r\n    self.clearButtons()\r\n    createButtonsOnAllObjects(false)\r\n    createSetupActionButtons(false)\r\nend\r\n\r\nfunction getAllObjectsInMemory()\r\n  local objTable = {}\r\n  local curObj = {}\r\n\r\n  for guid in pairs(memoryListBackup) do\r\n    curObj = getObjectFromGUID(guid)\r\n    table.insert(objTable, curObj)\r\n  end\r\n\r\n  return objTable\r\n  -- return getAllObjects()\r\nend\r\n\r\n--Creates selection buttons on objects\r\nfunction createButtonsOnAllObjects(move)\r\n    local howManyButtons = 0\r\n\r\n    local objsToHaveButtons = {}\r\n    if move == true then\r\n      objsToHaveButtons = getAllObjectsInMemory()\r\n    else\r\n      objsToHaveButtons = getAllObjects()\r\n    end\r\n\r\n    for _, obj in ipairs(objsToHaveButtons) do\r\n        if obj ~= self then\r\n            local dummyIndex = howManyButtons\r\n            --On a normal bag, the button positions aren't the same size as the bag.\r\n            globalScaleFactor = 1 * 1/self.getScale().x\r\n            --Super sweet math to set button positions\r\n            local selfPos = self.getPosition()\r\n            local objPos = obj.getPosition()\r\n            local deltaPos = findOffsetDistance(selfPos, objPos, obj)\r\n            local objPos = rotateLocalCoordinates(deltaPos, self)\r\n            objPos.x = -objPos.x * globalScaleFactor\r\n            objPos.y = objPos.y * globalScaleFactor + 2\r\n            objPos.z = objPos.z * globalScaleFactor * 0.9\r\n            --Offset rotation of bag\r\n            local rot = self.getRotation()\r\n            rot.y = -rot.y + 180\r\n            --Create function\r\n            local funcName = \"selectButton_\" .. howManyButtons\r\n            local func = function() buttonClick_selection(dummyIndex, obj, move) end\r\n            local color = {0.75,0.25,0.25,0.6}\r\n            local colorMove = {0,0,1,0.6}\r\n            if move == true then\r\n              color = colorMove\r\n            end\r\n            self.setVar(funcName, func)\r\n            self.createButton({\r\n                click_function=funcName, function_owner=self,\r\n                position=objPos, rotation=rot, height=500, width=500,\r\n                color=color,\r\n            })\r\n            howManyButtons = howManyButtons + 1\r\n        end\r\n    end\r\nend\r\n\r\n--Creates submit and cancel buttons\r\nfunction createSetupActionButtons(move)\r\n    self.createButton({\r\n        label=\"Cancel\", click_function=\"buttonClick_cancel\", function_owner=self,\r\n      position={-0.6,0.1,-2.1}, rotation={0,0,0}, height=220, width=550,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\n\r\n    self.createButton({\r\n        label=\"Submit\", click_function=\"buttonClick_submit\", function_owner=self,\r\n        position={-0.6,0.3,-2.5}, rotation={0,0,0}, height=220, width=550,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\n\r\n    if move == false then\r\n      self.createButton({\r\n          label=\"Add\", click_function=\"buttonClick_add\", function_owner=self,\r\n          position={0.6,0.3,-2.1}, rotation={0,0,0}, height=220, width=550,\r\n          font_size=130, color={0,0,0}, font_color={0.25,1,0.25}\r\n      })\r\n\r\n        if fresh == false then\r\n            self.createButton({\r\n                label=\"Set New\", click_function=\"buttonClick_setNew\", function_owner=self,\r\n                position={0.6,0.3,-2.9}, rotation={0,0,0}, height=220, width=550,\r\n                font_size=130, color={0,0,0}, font_color={0.75,0.75,1}\r\n            })\r\n            self.createButton({\r\n                label=\"Remove\", click_function=\"buttonClick_remove\", function_owner=self,\r\n                position={0.6,0.3,-2.5}, rotation={0,0,0}, height=220, width=550,\r\n                font_size=130, color={0,0,0}, font_color={1,0.25,0.25}\r\n            })\r\n        end\r\n    end\r\n\r\n    self.createButton({\r\n        label=\"Reset\", click_function=\"buttonClick_reset\", function_owner=self,\r\n        position={-0.6,0.3,-2.9}, rotation={0,0,0}, height=220, width=550,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\nend\r\n\r\n\r\n--During Setup\r\n\r\n\r\n--Checks or unchecks buttons\r\nfunction buttonClick_selection(index, obj, move)\r\n    local colorMove = {0,0,1,0.6}\r\n    local color = {0,1,0,0.6}\r\n\r\n    previousGuid = selectedGuid\r\n    selectedGuid = obj.getGUID()\r\n\r\n    theList = memoryList\r\n    if move == true then\r\n       theList = moveList\r\n       if previousGuid ~= nil and previousGuid ~= selectedGuid then\r\n         local prevObj = getObjectFromGUID(previousGuid)\r\n         prevObj.highlightOff()\r\n         self.editButton({index=previousIndex, color=colorMove})\r\n         theList[previousGuid] = nil\r\n       end\r\n       previousIndex = index\r\n    end\r\n\r\n    if theList[selectedGuid] == nil then\r\n        self.editButton({index=index, color=color})\r\n        --Adding pos/rot to memory table\r\n        local pos, rot = obj.getPosition(), obj.getRotation()\r\n        --I need to add it like this or it won't save due to indexing issue\r\n        theList[obj.getGUID()] = {\r\n            pos={x=round(pos.x,4), y=round(pos.y,4), z=round(pos.z,4)},\r\n            rot={x=round(rot.x,4), y=round(rot.y,4), z=round(rot.z,4)},\r\n            lock=obj.getLock()\r\n        }\r\n        obj.highlightOn({0,1,0})\r\n    else\r\n      color = {0.75,0.25,0.25,0.6}\r\n      if move == true then\r\n        color = colorMove\r\n      end\r\n        self.editButton({index=index, color=color})\r\n        theList[obj.getGUID()] = nil\r\n        obj.highlightOff()\r\n    end\r\nend\r\n\r\n--Cancels selection process\r\nfunction buttonClick_cancel()\r\n    memoryList = memoryListBackup\r\n    moveList = {}\r\n    self.clearButtons()\r\n    if next(memoryList) == nil then\r\n        createSetupButton()\r\n    else\r\n        createMemoryActionButtons()\r\n    end\r\n    removeAllHighlights()\r\n    broadcastToAll(\"Selection Canceled\", {1,1,1})\r\n    moveGuid = nil\r\nend\r\n\r\n--Saves selections\r\nfunction buttonClick_submit()\r\n    fresh = false\r\n    if next(moveList) ~= nil then\r\n        for guid in pairs(moveList) do\r\n            moveGuid = guid\r\n        end\r\n        if memoryListBackup[moveGuid] == nil then\r\n            broadcastToAll(\"Item selected for moving is not already in memory\", {1, 0.25, 0.25})\r\n        else\r\n            broadcastToAll(\"Moving all items in memory relative to new objects position!\", {0.75, 0.75, 1})\r\n            self.clearButtons()\r\n            createMemoryActionButtons()\r\n            local count = 0\r\n            for guid in pairs(moveList) do\r\n                moveGuid = guid\r\n                count = count + 1\r\n                local obj = getObjectFromGUID(guid)\r\n                if obj ~= nil then obj.highlightOff() end\r\n            end\r\n            updateMemoryWithMoves()\r\n            updateSave()\r\n            buttonClick_place()\r\n        end\r\n    elseif next(memoryList) == nil and moveGuid == nil then\r\n      memoryList = memoryListBackup\r\n      broadcastToAll(\"No selections made.\", {0.75, 0.25, 0.25})\r\n    end\r\n    combineMemoryFromBagsWithin()\r\n    self.clearButtons()\r\n    createMemoryActionButtons()\r\n    local count = 0\r\n    for guid in pairs(memoryList) do\r\n        count = count + 1\r\n        local obj = getObjectFromGUID(guid)\r\n        if obj ~= nil then obj.highlightOff() end\r\n    end\r\n    broadcastToAll(count..\" Objects Saved\", {1,1,1})\r\n    updateSave()\r\n    moveGuid = nil\r\nend\r\n\r\nfunction combineTables(first_table, second_table)\r\n  for k,v in pairs(second_table) do first_table[k] = v end\r\nend\r\n\r\nfunction buttonClick_add()\r\n    fresh = false\r\n    combineTables(memoryList, memoryListBackup)\r\n    broadcastToAll(\"Adding internal bags and selections to existing memory\", {0.25, 0.75, 0.25})\r\n    combineMemoryFromBagsWithin()\r\n    self.clearButtons()\r\n    createMemoryActionButtons()\r\n    local count = 0\r\n    for guid in pairs(memoryList) do\r\n        count = count + 1\r\n        local obj = getObjectFromGUID(guid)\r\n        if obj ~= nil then obj.highlightOff() end\r\n    end\r\n    broadcastToAll(count..\" Objects Saved\", {1,1,1})\r\n    updateSave()\r\nend\r\n\r\nfunction buttonClick_remove()\r\n        broadcastToAll(\"Removing Selected Entries From Memory\", {1.0, 0.25, 0.25})\r\n        self.clearButtons()\r\n        createMemoryActionButtons()\r\n        local count = 0\r\n        for guid in pairs(memoryList) do\r\n            count = count + 1\r\n            memoryListBackup[guid] = nil\r\n            local obj = getObjectFromGUID(guid)\r\n            if obj ~= nil then obj.highlightOff() end\r\n        end\r\n        broadcastToAll(count..\" Objects Removed\", {1,1,1})\r\n        memoryList = memoryListBackup\r\n        updateSave()\r\nend\r\n\r\nfunction buttonClick_setNew()\r\n    broadcastToAll(\"Setting new position relative to items in memory\", {0.75, 0.75, 1})\r\n    self.clearButtons()\r\n    createMemoryActionButtons()\r\n    local count = 0\r\n    for _, obj in ipairs(getAllObjects()) do\r\n        guid = obj.guid\r\n        if memoryListBackup[guid] ~= nil then\r\n            count = count + 1\r\n            memoryListBackup[guid].pos = obj.getPosition()\r\n            memoryListBackup[guid].rot = obj.getRotation()\r\n            memoryListBackup[guid].lock = obj.getLock()\r\n        end\r\n    end\r\n    broadcastToAll(count..\" Objects Saved\", {1,1,1})\r\n    memoryList = memoryListBackup\r\n    updateSave()\r\nend\r\n\r\n--Resets bag to starting status\r\nfunction buttonClick_reset()\r\n    fresh = true\r\n    memoryList = {}\r\n    self.clearButtons()\r\n    createSetupButton()\r\n    removeAllHighlights()\r\n    broadcastToAll(\"Tool Reset\", {1,1,1})\r\n    updateSave()\r\nend\r\n\r\n\r\n--After Setup\r\n\r\n\r\n--Creates recall and place buttons\r\nfunction createMemoryActionButtons()\r\n    self.createButton({\r\n        label=\"Place\", click_function=\"buttonClick_place\", function_owner=self,\r\n        position={0.6,0.1,2.1}, rotation={0,0,0}, height=220, width=500,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\n    self.createButton({\r\n        label=\"Recall\", click_function=\"buttonClick_recall\", function_owner=self,\r\n        position={-0.6,0.1,2.1}, rotation={0,0,0}, height=220, width=500,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\n    self.createButton({\r\n        label=\"Setup\", click_function=\"buttonClick_setup\", function_owner=self,\r\n        position={0,0.1,-2.1}, rotation={0,0,0}, height=220, width=500,\r\n        font_size=130, color={0,0,0}, font_color={1,1,1}\r\n    })\r\n---    self.createButton({\r\n---      label=\"Move\", click_function=\"buttonClick_transpose\", function_owner=self,\r\n---      position={-2.8,0.3,0}, rotation={0,0,0}, height=350, width=800,\r\n---      font_size=250, color={0,0,0}, font_color={0.75,0.75,1}\r\n---    })\r\nend\r\n\r\n--Sends objects from bag/table to their saved position/rotation\r\nfunction buttonClick_place()\r\n    local bagObjList = self.getObjects()\r\n    for guid, entry in pairs(memoryList) do\r\n        local obj = getObjectFromGUID(guid)\r\n        --If obj is out on the table, move it to the saved pos/rot\r\n        if obj ~= nil then\r\n            obj.setPositionSmooth(entry.pos)\r\n            obj.setRotationSmooth(entry.rot)\r\n            obj.setLock(entry.lock)\r\n        else\r\n            --If obj is inside of the bag\r\n            for _, bagObj in ipairs(bagObjList) do\r\n                if bagObj.guid == guid then\r\n                    local item = self.takeObject({\r\n                        guid=guid, position=entry.pos, rotation=entry.rot, smooth=false\r\n                    })\r\n                    item.setLock(entry.lock)\r\n                    break\r\n                end\r\n            end\r\n        end\r\n    end\r\n    broadcastToAll(\"Objects Placed\", {1,1,1})\r\nend\r\n\r\n--Recalls objects to bag from table\r\nfunction buttonClick_recall()\r\n    for guid, entry in pairs(memoryList) do\r\n        local obj = getObjectFromGUID(guid)\r\n        if obj ~= nil then self.putObject(obj) end\r\n    end\r\n    broadcastToAll(\"Objects Recalled\", {1,1,1})\r\nend\r\n\r\n\r\n--Utility functions\r\n\r\n\r\n--Find delta (difference) between 2 x/y/z coordinates\r\nfunction findOffsetDistance(p1, p2, obj)\r\n    local yOffset = 0\r\n    if obj ~= nil then\r\n        local bounds = obj.getBounds()\r\n        yOffset = (bounds.size.y - bounds.offset.y)\r\n    end\r\n    local deltaPos = {}\r\n    deltaPos.x = (p2.x-p1.x)\r\n    deltaPos.y = (p2.y-p1.y) + yOffset\r\n    deltaPos.z = (p2.z-p1.z)\r\n    return deltaPos\r\nend\r\n\r\n--Used to rotate a set of coordinates by an angle\r\nfunction rotateLocalCoordinates(desiredPos, obj)\r\n\tlocal objPos, objRot = obj.getPosition(), obj.getRotation()\r\n    local angle = math.rad(objRot.y)\r\n\tlocal x = desiredPos.x * math.cos(angle) - desiredPos.z * math.sin(angle)\r\n\tlocal z = desiredPos.x * math.sin(angle) + desiredPos.z * math.cos(angle)\r\n\t--return {x=objPos.x+x, y=objPos.y+desiredPos.y, z=objPos.z+z}\r\n    return {x=x, y=desiredPos.y, z=z}\r\nend\r\n\r\nfunction rotateMyCoordinates(desiredPos, obj)\r\n\tlocal angle = math.rad(obj.getRotation().y)\r\n  local x = desiredPos.x * math.sin(angle)\r\n\tlocal z = desiredPos.z * math.cos(angle)\r\n    return {x=x, y=desiredPos.y, z=z}\r\nend\r\n\r\n--Coroutine delay, in seconds\r\nfunction wait(time)\r\n    local start = os.time()\r\n    repeat coroutine.yield(0) until os.time() > start + time\r\nend\r\n\r\n--Duplicates a table (needed to prevent it making reference to the same objects)\r\nfunction duplicateTable(oldTable)\r\n    local newTable = {}\r\n    for k, v in pairs(oldTable) do\r\n        newTable[k] = v\r\n    end\r\n    return newTable\r\nend\r\n\r\n--Moves scripted highlight from all objects\r\nfunction removeAllHighlights()\r\n    for _, obj in ipairs(getAllObjects()) do\r\n        obj.highlightOff()\r\n    end\r\nend\r\n\r\n--Round number (num) to the Nth decimal (dec)\r\nfunction round(num, dec)\r\n  local mult = 10^(dec or 0)\r\n  return math.floor(num * mult + 0.5) / mult\r\nend",
+      "LuaScriptState": "{\"ml\":{\"076b61\":{\"lock\":false,\"pos\":{\"x\":-32,\"y\":1.67,\"z\":0},\"rot\":{\"x\":0,\"y\":270,\"z\":0}},\"19e7d8\":{\"lock\":false,\"pos\":{\"x\":-30.2242164611816,\"y\":1.63722372055054,\"z\":-0.0299990326166153},\"rot\":{\"x\":359.920562744141,\"y\":270.000518798828,\"z\":0.0176045913249254}},\"1aa7cb\":{\"lock\":false,\"pos\":{\"x\":-17.1199169158936,\"y\":1.61892199516296,\"z\":-0.0297970715910196},\"rot\":{\"x\":359.920135498047,\"y\":270.001556396484,\"z\":0.0167074911296368}},\"23b896\":{\"lock\":false,\"pos\":{\"x\":-23.6766166687012,\"y\":1.63030028343201,\"z\":7.57000207901001},\"rot\":{\"x\":359.920104980469,\"y\":269.999084472656,\"z\":0.0168416313827038}},\"28e161\":{\"lock\":false,\"pos\":{\"x\":-3.92750549316406,\"y\":1.71067988872528,\"z\":5.75700187683105},\"rot\":{\"x\":359.919738769531,\"y\":269.999603271484,\"z\":180.016815185547}},\"377b20\":{\"lock\":false,\"pos\":{\"x\":-30.2243175506592,\"y\":1.63494288921356,\"z\":-7.69999742507935},\"rot\":{\"x\":359.920104980469,\"y\":269.999267578125,\"z\":0.0168412197381258}},\"473382\":{\"lock\":false,\"pos\":{\"x\":-3.9285,\"y\":1.758,\"z\":5.72},\"rot\":{\"x\":0,\"y\":269.9995,\"z\":180}},\"476631\":{\"lock\":false,\"pos\":{\"x\":-43.4400291442871,\"y\":1.53360486030579,\"z\":7.65001583099365},\"rot\":{\"x\":6.82026390919077E-09,\"y\":270,\"z\":-4.22645207720507E-08}},\"47cd4f\":{\"lock\":false,\"pos\":{\"x\":-12.133,\"y\":2.02,\"z\":-11.4323},\"rot\":{\"x\":0,\"y\":-0.0001,\"z\":0}},\"50a9d7\":{\"lock\":false,\"pos\":{\"x\":-20.4664993286133,\"y\":1.61215877532959,\"z\":7.36460018157959},\"rot\":{\"x\":0.0798943638801575,\"y\":90.0003051757813,\"z\":359.983123779297}},\"5f4d79\":{\"lock\":false,\"pos\":{\"x\":-21.121000289917,\"y\":1.60995018482208,\"z\":-3.25570034980774},\"rot\":{\"x\":0.06840780377388,\"y\":135.000396728516,\"z\":0.0445858277380466}},\"69032d\":{\"lock\":false,\"pos\":{\"x\":-3.93000459671021,\"y\":1.62800097465515,\"z\":14.9000368118286},\"rot\":{\"x\":9.88418165093208E-08,\"y\":270,\"z\":180}},\"692e5f\":{\"lock\":false,\"pos\":{\"x\":-17.1201171875,\"y\":1.61667001247406,\"z\":-7.69999647140503},\"rot\":{\"x\":359.920104980469,\"y\":269.998077392578,\"z\":0.0168429240584373}},\"6a2978\":{\"lock\":false,\"pos\":{\"x\":-23.6765003204346,\"y\":1.61334490776062,\"z\":-3.82999992370605},\"rot\":{\"x\":0.0168396029621363,\"y\":179.999755859375,\"z\":0.0799403935670853}},\"7234af\":{\"lock\":false,\"pos\":{\"x\":-17.1199989318848,\"y\":1.60420215129852,\"z\":-3.82999968528748},\"rot\":{\"x\":0.0168400723487139,\"y\":179.999450683594,\"z\":0.0799458548426628}},\"75ffdc\":{\"lock\":false,\"pos\":{\"x\":-26.9897003173828,\"y\":1.61804449558258,\"z\":-3.55959987640381},\"rot\":{\"x\":0.0253676623106003,\"y\":30.0002193450928,\"z\":359.922393798828}},\"76ed31\":{\"lock\":false,\"pos\":{\"x\":-23.6399993896484,\"y\":1.53360486030579,\"z\":-7.65001487731934},\"rot\":{\"x\":-3.34556702341615E-08,\"y\":269.999206542969,\"z\":-3.61549190586175E-08}},\"775f4f\":{\"lock\":false,\"pos\":{\"x\":-26.9925003051758,\"y\":1.62123584747314,\"z\":7.28630018234253},\"rot\":{\"x\":0.0798941627144814,\"y\":89.9998092651367,\"z\":359.983123779297}},\"7a167a\":{\"lock\":false,\"pos\":{\"x\":1.69000124931335,\"y\":1.55803668498993,\"z\":14.2400035858154},\"rot\":{\"x\":-3.64051516044128E-06,\"y\":225,\"z\":-1.69931593063666E-06}},\"8112ff\":{\"lock\":false,\"pos\":{\"x\":-3.69199919700623,\"y\":1.58300042152405,\"z\":-14.9167079925537},\"rot\":{\"x\":-5.25041514265467E-07,\"y\":270.02099609375,\"z\":3.4053297781611E-07}},\"83358c\":{\"lock\":false,\"pos\":{\"x\":-27.0804004669189,\"y\":1.62024259567261,\"z\":3.49000072479248},\"rot\":{\"x\":359.955413818359,\"y\":224.999893188477,\"z\":0.0683783441781998}},\"8b777a\":{\"lock\":false,\"pos\":{\"x\":-17.0399837493896,\"y\":1.53360486030579,\"z\":-7.45678676139505E-07},\"rot\":{\"x\":6.63011121559975E-08,\"y\":269.986450195313,\"z\":-1.3171755597341E-07}},\"91aa09\":{\"lock\":false,\"pos\":{\"x\":-30.2400016784668,\"y\":1.53360486030579,\"z\":-1.24079485885886E-06},\"rot\":{\"x\":-1.71783085534116E-08,\"y\":269.998809814453,\"z\":-1.92207778582087E-08}},\"a22908\":{\"lock\":false,\"pos\":{\"x\":-3.9558424949646,\"y\":1.59660506248474,\"z\":-10.4412145614624},\"rot\":{\"x\":-9.85418058263576E-09,\"y\":270.000122070313,\"z\":-1.12614877423312E-08}},\"ae0984\":{\"lock\":false,\"pos\":{\"x\":-23.6544818878174,\"y\":1.53321468830109,\"z\":-0.022906394675374},\"rot\":{\"x\":0.00438335165381432,\"y\":269.058502197266,\"z\":359.973052978516}},\"af8db2\":{\"lock\":false,\"pos\":{\"x\":-23.6763172149658,\"y\":1.62806689739227,\"z\":-0.0277968645095825},\"rot\":{\"x\":359.920104980469,\"y\":269.999206542969,\"z\":0.0168413165956736}},\"b3f79e\":{\"lock\":false,\"pos\":{\"x\":-11.8947191238403,\"y\":1.5200001001358,\"z\":-8.11061382293701},\"rot\":{\"x\":-1.50156481026897E-07,\"y\":270.000427246094,\"z\":-3.04075946644389E-08}},\"b50a74\":{\"lock\":false,\"pos\":{\"x\":-3.6454,\"y\":1.583,\"z\":-14.9795},\"rot\":{\"x\":0,\"y\":269.9876,\"z\":0}},\"b5b8db\":{\"lock\":false,\"pos\":{\"x\":-15.6844148635864,\"y\":1.66888844966888,\"z\":-0.0290974024683237},\"rot\":{\"x\":0.0791712552309036,\"y\":269.986694335938,\"z\":359.983001708984}},\"c3844b\":{\"lock\":false,\"pos\":{\"x\":-1.353,\"y\":1.4815,\"z\":-26.603},\"rot\":{\"x\":0,\"y\":269.9981,\"z\":0}},\"c6f130\":{\"lock\":false,\"pos\":{\"x\":-2.94000220298767,\"y\":1.61837291717529,\"z\":-5.1040096282959},\"rot\":{\"x\":-3.50761197864813E-08,\"y\":270,\"z\":-9.89268578166502E-09}},\"c6f13f\":{\"lock\":false,\"pos\":{\"x\":-2.94000053405762,\"y\":1.61837291717529,\"z\":0.392999976873398},\"rot\":{\"x\":7.67286891800723E-08,\"y\":270,\"z\":-3.94645027768092E-08}},\"d2ad6e\":{\"lock\":false,\"pos\":{\"x\":-17.1200180053711,\"y\":1.62115752696991,\"z\":7.57000350952148},\"rot\":{\"x\":359.920104980469,\"y\":269.99658203125,\"z\":0.0168450437486172}},\"d716a1\":{\"lock\":false,\"pos\":{\"x\":-27.2073001861572,\"y\":1.61935830116272,\"z\":-0.121600218117237},\"rot\":{\"x\":0.0798944160342216,\"y\":89.9999084472656,\"z\":359.983123779297}},\"d85d68\":{\"lock\":false,\"pos\":{\"x\":-23.6765003204346,\"y\":1.61560475826263,\"z\":3.8600001335144},\"rot\":{\"x\":0.0168399680405855,\"y\":179.999450683594,\"z\":0.0799410417675972}},\"d9c370\":{\"lock\":false,\"pos\":{\"x\":-30.2241992950439,\"y\":1.62473499774933,\"z\":3.86000037193298},\"rot\":{\"x\":0.0168398097157478,\"y\":179.999588012695,\"z\":0.0799403339624405}},\"defc6a\":{\"lock\":false,\"pos\":{\"x\":-23.6471862792969,\"y\":1.53360486030579,\"z\":7.70591402053833},\"rot\":{\"x\":-5.68862823513427E-08,\"y\":270.293304443359,\"z\":1.24633984910361E-07}},\"e1b8fc\":{\"lock\":false,\"pos\":{\"x\":-23.6766166687012,\"y\":1.62581253051758,\"z\":-7.69999647140503},\"rot\":{\"x\":359.920104980469,\"y\":269.999206542969,\"z\":0.0168413668870926}},\"e1f778\":{\"lock\":false,\"pos\":{\"x\":-17.1198997497559,\"y\":1.60646188259125,\"z\":3.86000037193298},\"rot\":{\"x\":0.0168397314846516,\"y\":179.999618530273,\"z\":0.0799399092793465}},\"f04bee\":{\"lock\":false,\"pos\":{\"x\":-30.2399997711182,\"y\":1.53347957134247,\"z\":7.65001010894775},\"rot\":{\"x\":0.00185045064426959,\"y\":270.003173828125,\"z\":359.99072265625}},\"f859a4\":{\"lock\":false,\"pos\":{\"x\":-2.68841671943665,\"y\":1.59734857082367,\"z\":-5.04849672317505},\"rot\":{\"x\":0.0168380346149206,\"y\":179.998397827148,\"z\":0.0802551358938217}},\"fac63b\":{\"lock\":false,\"pos\":{\"x\":-30.2243175506592,\"y\":1.63943064212799,\"z\":7.57000398635864},\"rot\":{\"x\":359.920104980469,\"y\":269.999267578125,\"z\":0.016841247677803}},\"fc28a1\":{\"lock\":false,\"pos\":{\"x\":-36.840015411377,\"y\":1.53360486030579,\"z\":7.65001535415649},\"rot\":{\"x\":3.32075629216888E-08,\"y\":269.998962402344,\"z\":1.21332002223085E-08}}}}",
+      "XmlUI": "",
+      "ContainedObjects": [
+        {
+          "GUID": "b50a74",
+          "Name": "Custom_Tile",
+          "Transform": {
+            "posX": -3.64542,
+            "posY": 1.58300042,
+            "posZ": -14.9794617,
+            "rotX": -3.556619E-08,
+            "rotY": 269.987579,
+            "rotZ": -5.91287641E-09,
+            "scaleX": 2.2,
+            "scaleY": 1.0,
+            "scaleZ": 2.2
+          },
+          "Nickname": "Arkham Chronicles Difficulty Selector",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "CustomImage": {
+            "ImageURL": "http://cloud-3.steamusercontent.com/ugc/965354846165100486/3DC8FCEF364B30758B09EF96AF9458F2B8E64D56/",
+            "ImageSecondaryURL": "https://i.imgur.com/EcbhVuh.jpg/",
+            "ImageScalar": 1.0,
+            "WidthScale": 0.0,
+            "CustomTile": {
+              "Type": 3,
+              "Thickness": 0.1,
+              "Stackable": false,
+              "Stretch": true
+            }
+          },
+          "LuaScript": "-- edit the \"tokenData\" table to change the preset difficulties\n-- list of valid ids: 'p1', '0', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8',\n--   'skull', 'cultist', 'tablet', 'elder', 'red', 'blue', 'bless', 'curse', 'frost'\n\nlocal tokenData = {\n  Easy = { 'p1', 'p1', '0', '0', '0', 'm1', 'm1', 'm1', 'm2', 'm2', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Standard = { 'p1', '0', '0', 'm1', 'm1', 'm1', 'm2', 'm2', 'm3', 'm4', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Hard = { '0', '0', '0', 'm1', 'm1', 'm2', 'm2', 'm3', 'm3', 'm4', 'm5', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Expert = { '0', 'm1', 'm1', 'm2', 'm2', 'm3', 'm3', 'm4', 'm4', 'm5', 'm6', 'm8', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n}\n\n-- create buttons on startup\nfunction onLoad()\n  local z_offset = -0.15\n  for difficulty, _ in pairs(tokenData) do\n    local clickFunction = difficulty:lower() .. \"Click\"\n    self.setVar(clickFunction, function() clickFun(difficulty) end)\n\n    self.createButton({\n      label = difficulty,\n      function_owner = self,\n      click_function = clickFunction,\n      position = { 0, 0.1, z_offset },\n      rotation = { 0, 0, 0 },\n      scale = { 0.47, 1, 0.47 },\n      height = 200,\n      width = 1150,\n      font_size = 100,\n      color = { 0.87, 0.8, 0.70 },\n      font_color = { 0, 0, 0 }\n    })\n    z_offset = z_offset + 0.20\n  end\nend\n\nfunction clickFun(difficulty)\n  Global.call(\"setChaosBagState\", tokenData[difficulty])\nend",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "473382",
+          "Name": "Deck",
+          "Transform": {
+            "posX": -3.92850041,
+            "posY": 1.75798,
+            "posZ": 5.7200017,
+            "rotX": 4.32964846E-08,
+            "rotY": 269.9995,
+            "rotZ": 180.0,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Encounter Deck",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": false,
+          "SidewaysCard": false,
+          "DeckIDs": [
+            231708,
+            231708,
+            231708,
+            231707,
+            231707,
+            231706,
+            231706,
+            231705,
+            231705,
+            231704,
+            231703,
+            231702,
+            231702,
+            231702,
+            231701,
+            231701,
+            231700,
+            231700,
+            231809,
+            231808,
+            231807,
+            231807,
+            231807,
+            231806,
+            231806,
+            231805,
+            231805,
+            231804,
+            231804,
+            231803,
+            231802,
+            231801
+          ],
+          "CustomDeck": {
+            "2317": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+              "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+              "NumWidth": 4,
+              "NumHeight": 3,
+              "BackIsHidden": true,
+              "UniqueBack": false,
+              "Type": 0
+            },
+            "2318": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+              "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+              "NumWidth": 4,
+              "NumHeight": 3,
+              "BackIsHidden": true,
+              "UniqueBack": false,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": "",
+          "ContainedObjects": [
+            {
+              "GUID": "ab3719",
+              "Name": "Card",
+              "Transform": {
+                "posX": 20.9562473,
+                "posY": 2.203742,
+                "posZ": 0.282653421,
+                "rotX": 0.00340474257,
+                "rotY": 269.9995,
+                "rotZ": 179.99913,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Distant Evils",
+              "Description": "Omen.",
+              "GMNotes": "{\n  \"id\": \"GRY0001\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Omen.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231708,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "4904d0",
+              "Name": "Card",
+              "Transform": {
+                "posX": 14.405777,
+                "posY": 1.73441541,
+                "posZ": -13.8319654,
+                "rotX": -0.00281561539,
+                "rotY": 269.999481,
+                "rotZ": 180.024323,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Distant Evils",
+              "Description": "Omen.",
+              "GMNotes": "{\n  \"id\": \"GRY0001\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Omen.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231708,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "d63054",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.9937792,
+                "posY": 1.57623422,
+                "posZ": 7.191085,
+                "rotX": 359.920227,
+                "rotY": 270.005066,
+                "rotZ": 0.01624975,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Distant Evils",
+              "Description": "Omen.",
+              "GMNotes": "{\n  \"id\": \"GRY0001\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Omen.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231708,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "b347d1",
+              "Name": "Card",
+              "Transform": {
+                "posX": -15.1765862,
+                "posY": 1.7388649,
+                "posZ": 7.12856245,
+                "rotX": 359.9205,
+                "rotY": 270.005066,
+                "rotZ": 0.011837706,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Twisted Alleys",
+              "Description": "Hazard.",
+              "GMNotes": "{\n  \"id\": \"GRY0002\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231707,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "d36612",
+              "Name": "Card",
+              "Transform": {
+                "posX": -15.1335211,
+                "posY": 1.7306242,
+                "posZ": 15.1695614,
+                "rotX": 359.933441,
+                "rotY": 269.998932,
+                "rotZ": 180.028931,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Twisted Alleys",
+              "Description": "Hazard.",
+              "GMNotes": "{\n  \"id\": \"GRY0002\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231707,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "50fdc5",
+              "Name": "Card",
+              "Transform": {
+                "posX": -15.3295956,
+                "posY": 1.62976587,
+                "posZ": 15.9645061,
+                "rotX": 0.0716057643,
+                "rotY": 270.000061,
+                "rotZ": 359.982727,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Public Disturbance",
+              "Description": "Hazard.",
+              "GMNotes": "{\n  \"id\": \"GRY0003\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231706,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "4911f2",
+              "Name": "Card",
+              "Transform": {
+                "posX": -15.3297215,
+                "posY": 1.77588809,
+                "posZ": 15.9645157,
+                "rotX": 0.07387834,
+                "rotY": 269.998474,
+                "rotZ": 359.992645,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Public Disturbance",
+              "Description": "Hazard.",
+              "GMNotes": "{\n  \"id\": \"GRY0003\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231706,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "ab3719",
+              "Name": "Card",
+              "Transform": {
+                "posX": -15.9929094,
+                "posY": 1.58014917,
+                "posZ": 15.8832378,
+                "rotX": 359.920624,
+                "rotY": 270.0,
+                "rotZ": 0.0137184272,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Police Interferance",
+              "Description": "Mystery.",
+              "GMNotes": "{\n  \"id\": \"GRY0004\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231705,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "1e04da",
+              "Name": "Card",
+              "Transform": {
+                "posX": -13.4282417,
+                "posY": 1.70155811,
+                "posZ": 13.7778349,
+                "rotX": 359.535278,
+                "rotY": 269.9516,
+                "rotZ": 181.449341,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Police Interferance",
+              "Description": "Mystery.",
+              "GMNotes": "{\n  \"id\": \"GRY0004\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231705,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "1d0c1c",
+              "Name": "Card",
+              "Transform": {
+                "posX": -15.7923059,
+                "posY": 1.73901558,
+                "posZ": 4.52112341,
+                "rotX": 359.919861,
+                "rotY": 269.999969,
+                "rotZ": 0.0123590212,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Tailed by O'Bannions",
+              "Description": "Scheme",
+              "GMNotes": "{\n  \"id\": \"GRY0005\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Scheme.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231704,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "ab3719",
+              "Name": "Card",
+              "Transform": {
+                "posX": -16.52605,
+                "posY": 1.57874775,
+                "posZ": 8.559591,
+                "rotX": 359.920471,
+                "rotY": 270.0019,
+                "rotZ": 0.0145635763,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Tailed by Sheldons",
+              "Description": "Scheme",
+              "GMNotes": "{\n  \"id\": \"GRY0006\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Scheme.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231703,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "b75b70",
+              "Name": "Card",
+              "Transform": {
+                "posX": -13.47085,
+                "posY": 1.72509861,
+                "posZ": 13.60628,
+                "rotX": 359.9252,
+                "rotY": 269.9989,
+                "rotZ": 0.0176846832,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Swarming Rats",
+              "Description": "Creature.",
+              "GMNotes": "{\n  \"id\": \"GRY0007\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Creature.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231702,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "50e716",
+              "Name": "Card",
+              "Transform": {
+                "posX": -13.8034887,
+                "posY": 1.57302034,
+                "posZ": 1.99893022,
+                "rotX": 359.920471,
+                "rotY": 270.000641,
+                "rotZ": 0.0145632224,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Swarming Rats",
+              "Description": "Creature.",
+              "GMNotes": "{\n  \"id\": \"GRY0007\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Creature.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231702,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "c4ce76",
+              "Name": "Card",
+              "Transform": {
+                "posX": -13.9735909,
+                "posY": 1.73492968,
+                "posZ": 1.969332,
+                "rotX": 359.9267,
+                "rotY": 270.0006,
+                "rotZ": 0.0145301558,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Swarming Rats",
+              "Description": "Creature.",
+              "GMNotes": "{\n  \"id\": \"GRY0007\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Creature.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231702,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "ab3719",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5550861,
+                "posY": 1.57516873,
+                "posZ": 5.69822454,
+                "rotX": 359.92038,
+                "rotY": 270.002563,
+                "rotZ": 0.0152713312,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "End Time Prophet",
+              "Description": "Humanoid. Possessed.",
+              "GMNotes": "{\n  \"id\": \"GRY0008\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Possessed.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231701,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "16d6d6",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5491152,
+                "posY": 1.73727059,
+                "posZ": 5.64764357,
+                "rotX": 359.924774,
+                "rotY": 270.002625,
+                "rotZ": 0.0113747623,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "End Time Prophet",
+              "Description": "Humanoid. Possessed.",
+              "GMNotes": "{\n  \"id\": \"GRY0008\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Possessed.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231701,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "057d5f",
+              "Name": "Card",
+              "Transform": {
+                "posX": 25.12937,
+                "posY": 1.52805436,
+                "posZ": 33.6414566,
+                "rotX": 359.920532,
+                "rotY": 269.9922,
+                "rotZ": 0.0141133359,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Corrupted Cop",
+              "Description": "Humanoid. Monster. Abomination.",
+              "GMNotes": "{\n  \"id\": \"GRY0009\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Monster. Abomination.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231700,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "2ceae2",
+              "Name": "Card",
+              "Transform": {
+                "posX": 25.1391239,
+                "posY": 1.683543,
+                "posZ": 33.4398346,
+                "rotX": 359.926178,
+                "rotY": 269.992523,
+                "rotZ": 0.011026796,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Corrupted Cop",
+              "Description": "Humanoid. Monster. Abomination.",
+              "GMNotes": "{\n  \"id\": \"GRY0009\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Monster. Abomination.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231700,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "ea8fcf",
+              "Name": "Card",
+              "Transform": {
+                "posX": 25.5329266,
+                "posY": 1.694792,
+                "posZ": 33.29811,
+                "rotX": 359.920532,
+                "rotY": 269.992462,
+                "rotZ": 0.0159023385,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Possession (Devious)",
+              "Description": "Spectral. Hex. Terror.",
+              "GMNotes": "{\n  \"id\": \"GRY0010\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"hidden\": true,\n  \"traits\": \"Spectral. Hex. Terror.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231809,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "ab3719",
+              "Name": "Card",
+              "Transform": {
+                "posX": 19.12706,
+                "posY": 1.70121276,
+                "posZ": 36.15682,
+                "rotX": 359.937378,
+                "rotY": 270.0,
+                "rotZ": 180.0152,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Possession (Calamitous)",
+              "Description": "Spectral. Hex. Terror.",
+              "GMNotes": "{\n  \"id\": \"GRY0010\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"hidden\": true,\n  \"traits\": \"Spectral. Hex. Terror.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231808,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14bfaf",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Haunting Dread",
+              "Description": "Spectral. Curse.",
+              "GMNotes": "{\n  \"id\": \"GRY0012\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Curse.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231807,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14bf9a",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Haunting Dread",
+              "Description": "Spectral. Curse.",
+              "GMNotes": "{\n  \"id\": \"GRY0012\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Curse.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231807,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14bfae",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Haunting Dread",
+              "Description": "Spectral. Curse.",
+              "GMNotes": "{\n  \"id\": \"GRY0012\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Curse.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231807,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14b123",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Bury The Memory",
+              "Description": "Terror.",
+              "GMNotes": "{\n  \"id\": \"GRY0013\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Terror.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231806,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14b124",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Bury The Memory",
+              "Description": "Terror.",
+              "GMNotes": "{\n  \"id\": \"GRY0013\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Terror.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231806,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14b125",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Unnatural Cold",
+              "Description": "Spectral. Hazard.",
+              "GMNotes": "{\n  \"id\": \"GRY0014\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231805,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "14b126",
+              "Name": "Card",
+              "Transform": {
+                "posX": 18.6906662,
+                "posY": 1.54066241,
+                "posZ": 36.2848244,
+                "rotX": 359.920227,
+                "rotY": 270.000275,
+                "rotZ": 180.017624,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Unnatural Cold",
+              "Description": "Spectral. Hazard.",
+              "GMNotes": "{\n  \"id\": \"GRY0014\",\n  \"type\": \"Treachery\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Hazard.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231805,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "16d127",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5491152,
+                "posY": 1.73727059,
+                "posZ": 5.64764357,
+                "rotX": 359.924774,
+                "rotY": 270.002625,
+                "rotZ": 0.0113747623,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Possessed Townsfolk",
+              "Description": "Humanoid. Possessed. Spectral.",
+              "GMNotes": "{\n  \"id\": \"GRY0015\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Possessed. Spectral.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231804,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "16d128",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5491152,
+                "posY": 1.73727059,
+                "posZ": 5.64764357,
+                "rotX": 359.924774,
+                "rotY": 270.002625,
+                "rotZ": 0.0113747623,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Possessed Townsfolk",
+              "Description": "Humanoid. Possessed. Spectral.",
+              "GMNotes": "{\n  \"id\": \"GRY0015\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Possessed. Spectral.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231804,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "16d129",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5491152,
+                "posY": 1.73727059,
+                "posZ": 5.64764357,
+                "rotX": 359.924774,
+                "rotY": 270.002625,
+                "rotZ": 0.0113747623,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Lingering Wight",
+              "Description": "Spectral. Geist.",
+              "GMNotes": "{\n  \"id\": \"GRY0016\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Geist.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231803,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "16d130",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5491152,
+                "posY": 1.73727059,
+                "posZ": 5.64764357,
+                "rotX": 359.924774,
+                "rotY": 270.002625,
+                "rotZ": 0.0113747623,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Restless Spirit",
+              "Description": "Spectral.",
+              "GMNotes": "{\n  \"id\": \"GRY0017\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral.\",\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231802,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "16d130",
+              "Name": "Card",
+              "Transform": {
+                "posX": -14.5491152,
+                "posY": 1.73727059,
+                "posZ": 5.64764357,
+                "rotX": 359.924774,
+                "rotY": 270.002625,
+                "rotZ": 0.0113747623,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Ritual Servitor",
+              "Description": "Spectral. Monster. Elite.",
+              "GMNotes": "{\n  \"id\": \"GRY0018\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Monster. Elite.\",\n  \"victory\": 2,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 231801,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2317": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            }
+          ]
+        },
+        {
+          "GUID": "476631",
+          "Name": "Card",
+          "Transform": {
+            "posX": -43.440033,
+            "posY": 1.53360486,
+            "posZ": 7.65001774,
+            "rotX": 3.294096E-08,
+            "rotY": 270.0,
+            "rotZ": -2.13058566E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "St. Mary's Hospital",
+          "Description": "Arkham. Uptown.",
+          "GMNotes": "{\n  \"id\": \"01129\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Uptown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Heart\",\n    \"connections\": \"Quote|Moon|SlashAlt\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Heart\",\n    \"connections\": \"Quote|Moon|SlashAlt\",\n    \"uses\": [\n      {\n        \"count\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232306,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "47cd4f",
+          "Name": "BlockSquare",
+          "Transform": {
+            "posX": -12.1329966,
+            "posY": 2.02,
+            "posZ": -11.4323025,
+            "rotX": 1.893655E-06,
+            "rotY": -4.4526063E-05,
+            "rotZ": -7.80058429E-07,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "FlipRefillHelper",
+          "Description": "Resets clue spawning for locations with the tag \"FlipRefill\"",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.9264706,
+            "g": 0.0,
+            "b": 0.0
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "LuaScript": "-- Bundled by luabundle {\"rootModuleName\":\"FlipRefillHelper.47cd4f.lua\",\"version\":\"1.6.0\"}\nlocal __bundle_require, __bundle_loaded, __bundle_register, __bundle_modules = (function(superRequire)\n\tlocal loadingPlaceholder = {[{}] = true}\n\n\tlocal register\n\tlocal modules = {}\n\n\tlocal require\n\tlocal loaded = {}\n\n\tregister = function(name, body)\n\t\tif not modules[name] then\n\t\t\tmodules[name] = body\n\t\tend\n\tend\n\n\trequire = function(name)\n\t\tlocal loadedModule = loaded[name]\n\n\t\tif loadedModule then\n\t\t\tif loadedModule == loadingPlaceholder then\n\t\t\t\treturn nil\n\t\t\tend\n\t\telse\n\t\t\tif not modules[name] then\n\t\t\t\tif not superRequire then\n\t\t\t\t\tlocal identifier = type(name) == 'string' and '\\\"' .. name .. '\\\"' or tostring(name)\n\t\t\t\t\terror('Tried to require ' .. identifier .. ', but no such module has been registered')\n\t\t\t\telse\n\t\t\t\t\treturn superRequire(name)\n\t\t\t\tend\n\t\t\tend\n\n\t\t\tloaded[name] = loadingPlaceholder\n\t\t\tloadedModule = modules[name](require, loaded, register, modules)\n\t\t\tloaded[name] = loadedModule\n\t\tend\n\n\t\treturn loadedModule\n\tend\n\n\treturn require, loaded, register, modules\nend)(nil)\n__bundle_register(\"FlipRefillHelper.47cd4f.lua\", function(require, _LOADED, __bundle_register, __bundle_modules)\nlocal tokenSpawnTrackerApi = require(\"core/token/TokenSpawnTrackerApi\")\r\n\r\nfunction onObjectRotate(obj, _, flip, _, _, oldFlip)\r\n  if flip == oldFlip then return end\r\n  if obj.hasTag(\"FlipRefill\") then\r\n    tokenSpawnTrackerApi.resetTokensSpawned(obj.getGUID())\r\n  end\r\nend\r\n\nend)\n__bundle_register(\"core/token/TokenSpawnTrackerApi\", function(require, _LOADED, __bundle_register, __bundle_modules)\ndo\n  local TokenSpawnTracker = {}\n  local guidReferenceApi = require(\"core/GUIDReferenceApi\")\n\n  local function getSpawnTracker()\n    return guidReferenceApi.getObjectByOwnerAndType(\"Mythos\", \"TokenSpawnTracker\")\n  end\n\n  TokenSpawnTracker.hasSpawnedTokens = function(cardGuid)\n    return getSpawnTracker().call(\"hasSpawnedTokens\", cardGuid)\n  end\n\n  TokenSpawnTracker.markTokensSpawned = function(cardGuid)\n    return getSpawnTracker().call(\"markTokensSpawned\", cardGuid)\n  end\n\n  TokenSpawnTracker.resetTokensSpawned = function(cardGuid)\n    return getSpawnTracker().call(\"resetTokensSpawned\", cardGuid)\n  end\n\n  TokenSpawnTracker.resetAllAssetAndEvents = function()\n    return getSpawnTracker().call(\"resetAllAssetAndEvents\")\n  end\n\n  TokenSpawnTracker.resetAllLocations = function()\n    return getSpawnTracker().call(\"resetAllLocations\")\n  end\n\n  TokenSpawnTracker.resetAll = function()\n    return getSpawnTracker().call(\"resetAll\")\n  end\n\n  return TokenSpawnTracker\nend\n\nend)\n__bundle_register(\"core/GUIDReferenceApi\", function(require, _LOADED, __bundle_register, __bundle_modules)\ndo\n  local GUIDReferenceApi = {}\n\n  local function getGuidHandler()\n    return getObjectFromGUID(\"123456\")\n  end\n\n  -- returns all matching objects as a table with references\n  ---@param owner String Parent object for this search\n  ---@param type String Type of object to search for\n  GUIDReferenceApi.getObjectByOwnerAndType = function(owner, type)\n    return getGuidHandler().call(\"getObjectByOwnerAndType\", { owner = owner, type = type })\n  end\n\n  -- returns all matching objects as a table with references\n  ---@param type String Type of object to search for\n  GUIDReferenceApi.getObjectsByType = function(type)\n    return getGuidHandler().call(\"getObjectsByType\", type)\n  end\n\n  -- returns all matching objects as a table with references\n  ---@param owner String Parent object for this search\n  GUIDReferenceApi.getObjectsByOwner = function(owner)\n    return getGuidHandler().call(\"getObjectsByOwner\", owner)\n  end\n\n  -- sends new information to the reference handler to edit the main index\n  ---@param owner String Parent of the object\n  ---@param type String Type of the object\n  ---@param guid String GUID of the object\n  GUIDReferenceApi.editIndex = function(owner, type, guid)\n    return getGuidHandler().call(\"editIndex\", {\n      owner = owner,\n      type = type,\n      guid = guid\n    })\n  end\n\n  return GUIDReferenceApi\nend\n\nend)\nreturn __bundle_require(\"FlipRefillHelper.47cd4f.lua\")",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "76ed31",
+          "Name": "Card",
+          "Transform": {
+            "posX": -23.64,
+            "posY": 1.53360486,
+            "posZ": -7.65001631,
+            "rotX": -7.36124761E-08,
+            "rotY": 269.9992,
+            "rotZ": -1.0931231E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Police Station.",
+          "Description": "Arkham. Easttown.",
+          "GMNotes": "{\n  \"id\": \"01132\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Star\",\n    \"connections\": \"Clover|Plus|Triangle|SlashesAlt|T\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Star\",\n    \"connections\": \"Clover|Plus|Triangle|SlashesAlt|T\",\n    \"uses\": [\n      {\n        \"count\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232303,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "7a167a",
+          "Name": "Custom_Model_Bag",
+          "Transform": {
+            "posX": 1.6900022,
+            "posY": 1.55803633,
+            "posZ": 14.2400064,
+            "rotX": 1.94374547E-06,
+            "rotY": 224.999985,
+            "rotZ": 1.698065E-06,
+            "scaleX": 2.0,
+            "scaleY": 2.0,
+            "scaleZ": 2.0
+          },
+          "Nickname": "Set-aside",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.0,
+            "g": 0.0,
+            "b": 0.0
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "MaterialIndex": -1,
+          "MeshIndex": -1,
+          "CustomMesh": {
+            "MeshURL": "http://cloud-3.steamusercontent.com/ugc/2038485431565955058/F72FECE5488594A28292C06997A2E28A8B8961C5/",
+            "DiffuseURL": "http://cloud-3.steamusercontent.com/ugc/764975951334960553/C518D80E31E27DB23EEAC8CF9253E59798865790/",
+            "NormalURL": "http://cloud-3.steamusercontent.com/ugc/764975951334960069/E70E4A58A1B7827F1E5E2AF9FF44DF0BD5DA33F7/",
+            "ColliderURL": "",
+            "Convex": true,
+            "MaterialIndex": 1,
+            "TypeIndex": 6,
+            "CastShadows": true
+          },
+          "Bag": {
+            "Order": 0
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": "",
+          "PhysicsMaterial": {
+            "StaticFriction": 0.6,
+            "DynamicFriction": 0.6,
+            "Bounciness": 0.0,
+            "FrictionCombine": 0,
+            "BounceCombine": 0
+          },
+          "Rigidbody": {
+            "Mass": 1.375,
+            "Drag": 5.0,
+            "AngularDrag": 5.0,
+            "UseGravity": true
+          },
+          "ContainedObjects": [
+            {
+              "GUID": "ab3799",
+              "Name": "Card",
+              "Transform": {
+                "posX": 7.93193769,
+                "posY": 2.60460472,
+                "posZ": -81.41692,
+                "rotX": 7.44513642E-08,
+                "rotY": 270.0028,
+                "rotZ": -3.257466E-07,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Abigail Warren",
+              "Description": "Vengeful Spirit",
+              "GMNotes": "{\n  \"id\": \"GRY0019\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Humanoid. Geist. Elite.\",\n  \"victory\": 2,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 231800,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2318": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
+                  "NumWidth": 4,
+                  "NumHeight": 3,
+                  "BackIsHidden": true,
+                  "UniqueBack": false,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "2ed34b",
+              "Name": "Card",
+              "Transform": {
+                "posX": -12.8912487,
+                "posY": 2.50510383,
+                "posZ": -30.434742,
+                "rotX": -2.153219E-08,
+                "rotY": 270.0,
+                "rotZ": -1.79669719E-08,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Ritual Chamber",
+              "Description": "Rivertown.",
+              "GMNotes": "{\n  \"id\": \"01127\",\n  \"type\": \"Location\",\n  \"traits\": \"Rivertown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"TriangleAlt\",\n    \"connections\": \"SlashesAlt\"\n  },\n  \"locationBack\": {\n    \"icons\": \"TriangleAlt\",\n    \"connections\": \"SlashesAlt\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "Location",
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 232501,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2325": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Back.jpg",
+                  "NumWidth": 2,
+                  "NumHeight": 1,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "9d85dc",
+              "Name": "Card",
+              "Transform": {
+                "posX": -5.810931,
+                "posY": 2.50533056,
+                "posZ": -32.3222961,
+                "rotX": 0.00186114945,
+                "rotY": 270.0,
+                "rotZ": 359.99057,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Abandoned House",
+              "Description": "Arkham. Rivertown.",
+              "GMNotes": "{\n  \"id\": \"GRY0020\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Rivertown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"SlashesAlt\",\n    \"connections\": \"Triangle|Star|TriangleAlt\"\n  },\n  \"locationBack\": {\n    \"icons\": \"SlashesAlt\",\n    \"connections\": \"Triangle|Star|TriangleAlt\",\n    \"uses\": [\n      {\n        \"count\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "Location",
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": false,
+              "Hands": true,
+              "CardID": 232500,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2325": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Back.jpg",
+                  "NumWidth": 2,
+                  "NumHeight": 1,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            }
+          ]
+        },
+        {
+          "GUID": "8b777a",
+          "Name": "Card",
+          "Transform": {
+            "posX": -17.0399818,
+            "posY": 1.53360486,
+            "posZ": -9.510579E-07,
+            "rotX": 7.76353E-08,
+            "rotY": 269.98642,
+            "rotZ": -1.30119219E-07,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Arkham Asylum",
+          "Description": "Arkham. Downtown.",
+          "GMNotes": "{\n  \"id\": \"01130\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Downtown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Plus\",\n    \"connections\": \"Square|Clover|Star\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Plus\",\n    \"connections\": \"Square|Clover|Star\",\n    \"uses\": [\n      {\n        \"count\": 3,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232307,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "91aa09",
+          "Name": "Card",
+          "Transform": {
+            "posX": -30.2400017,
+            "posY": 1.53360486,
+            "posZ": -1.25684574E-06,
+            "rotX": -5.395739E-09,
+            "rotY": 269.9988,
+            "rotZ": -1.6988194E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Schoffner's General Store",
+          "Description": "Arkham. Rivertown.",
+          "GMNotes": "{\n  \"id\": \"01124\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Triangle\",\n    \"connections\": \"Hourglass|Star|SlashesAlt|Moon\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Triangle\",\n    \"connections\": \"Hourglass|Star|SlashesAlt|MoonAlt\"\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232304,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "a22908",
+          "Name": "Card",
+          "Transform": {
+            "posX": -3.95584345,
+            "posY": 1.59660506,
+            "posZ": -10.4412174,
+            "rotX": 4.69055479E-08,
+            "rotY": 270.000122,
+            "rotZ": 6.447453E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Scenario",
+          "Description": "The Haunting of Rivertown",
+          "GMNotes": "{\n  \"type\": \"ScenarioReference\",\n  \"class\": \"Mythos\",\n  \"tokens\": {\n    \"back\": {\n      \"Cultist\": {\n        \"description\": \"-2. If you fail, place 1 doom on your location and each connected location with doom.\",\n        \"modifier\": -2\n      },\n      \"Elder Thing\": {\n        \"description\": \"-5. If you fail, place 1 doom on your location and resolve the hunter keyword on each Spectral enemy in play.\",\n        \"modifier\": -5\n      },\n      \"Skull\": {\n        \"description\": \"-X. X is the amount of doom on your location (to a maximum of -6).\",\n        \"modifier\": -999\n      },\n      \"Tablet\": {\n        \"description\": \"-4. If there is doom on your location, take 1 horror and 1 damage.\",\n        \"modifier\": -4\n      }\n    },\n    \"front\": {\n      \"Cultist\": {\n        \"description\": \"-2. If you fail, place 1 doom on your location.\",\n        \"modifier\": -2\n      },\n      \"Elder Thing\": {\n        \"description\": \"-4. If you fail, place 1 doom on your location and resolve the hunter keyword on each Spectral enemy in play.\",\n        \"modifier\": -4\n      },\n      \"Skull\": {\n        \"description\": \"-X. X is the amount of doom on your location (to a maximum of -3).\",\n        \"modifier\": -999\n      },\n      \"Tablet\": {\n        \"description\": \"-3. If there is doom on your location, take 1 horror.\",\n        \"modifier\": -3\n      }\n    }\n  },\n  \"id\": \"01120\"\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232107,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2321": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Scenario_Card_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Scenario_Card_Back.jpg",
+              "NumWidth": 1,
+              "NumHeight": 1,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "ae0984",
+          "Name": "Card",
+          "Transform": {
+            "posX": -23.6544781,
+            "posY": 1.53350961,
+            "posZ": -0.02291093,
+            "rotX": 0.00169992156,
+            "rotY": 269.058533,
+            "rotZ": 359.992523,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "La Bella Luna",
+          "Description": "Arkham. Downtown.",
+          "GMNotes": "{\n  \"id\": \"01127\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Downtown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Clover\",\n    \"connections\": \"Square|Plus|Star\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  },\n  \"locationBack\": {\n\t\"traits\": \"Arkham. Casino. Speakeasy.\",\n    \"icons\": \"Clover\",\n    \"connections\": \"Square|Plus|Star\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "FlipRefill",
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232301,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "b3f79e",
+          "Name": "Custom_Tile",
+          "Transform": {
+            "posX": -11.8947144,
+            "posY": 1.52000022,
+            "posZ": -8.110616,
+            "rotX": 1.53430264E-07,
+            "rotY": 270.000427,
+            "rotZ": 1.00601923E-07,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Midnight Masks Helper",
+          "Description": "Randomizes locations, spawns cultists and shuffles the cultist deck.",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "CustomImage": {
+            "ImageURL": "http://cloud-3.steamusercontent.com/ugc/1759191866095195329/4B148B442FF84529F59EAE88F91BFBCAF215871A/",
+            "ImageSecondaryURL": "http://cloud-3.steamusercontent.com/ugc/1759191866095195329/4B148B442FF84529F59EAE88F91BFBCAF215871A/",
+            "ImageScalar": 1.0,
+            "WidthScale": 0.0,
+            "CustomTile": {
+              "Type": 0,
+              "Thickness": 0.1,
+              "Stackable": false,
+              "Stretch": true
+            }
+          },
+          "LuaScript": "ENCOUNTER_DECK_GUID = \"473382\"\n\nfunction onLoad()\n  self.createButton({\n    label = \"Set Up\",\n    click_function = \"setup\",\n    function_owner = self,\n    position = { 0, 0.1, -00 },\n    height = 120,\n    width = 500,\n    scale = { x = 1.75, y = 1.75, z = 1.75 },\n    font_size = 80\n  })\n\n  COUNTER = getObjectFromGUID('f182ee')\n  math.randomseed(os.time())\nend\n\nfunction setup(_obj, _color, alt_click)\n  if SETUP_DONE then return end\n  SETUP_DONE = true\n  local ENCOUNTER_DECK = getObjectFromGUID(ENCOUNTER_DECK_GUID)\n  ENCOUNTER_DECK.shuffle()\nend\n",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "c3844b",
+          "Name": "Custom_PDF",
+          "Transform": {
+            "posX": -1.3530004,
+            "posY": 1.48149931,
+            "posZ": -26.603,
+            "rotX": -5.61360665E-08,
+            "rotY": 269.9981,
+            "rotZ": 9.165503E-08,
+            "scaleX": 2.2,
+            "scaleY": 1.0,
+            "scaleZ": 2.2
+          },
+          "Nickname": "Arkham Chronicles - Campaign Guide",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          },
+          "Tags": [
+            "CampaignGuide",
+            "CleanUpHelper_ignore"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": false,
+          "CustomPDF": {
+            "PDFUrl": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/b152b2cf82f7776ae61f2c886ca201ffb50b67aa/ArkhamChronicles/ArkhamHorror_Arkham%20Chronicles_75x75_CampaignGuide_WithBleed_v1.pdf",
+            "PDFPassword": "",
+            "PDFPage": 0,
+            "PDFPageOffset": 0
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "c6f130",
+          "Name": "Deck",
+          "Transform": {
+            "posX": -2.94000268,
+            "posY": 1.61837292,
+            "posZ": -5.104011,
+            "rotX": 3.44246551E-08,
+            "rotY": 270.0,
+            "rotZ": -3.73748179E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Act Deck",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": false,
+          "SidewaysCard": false,
+          "DeckIDs": [
+            232405,
+            232404,
+            232403
+          ],
+          "CustomDeck": {
+            "2324": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+              "NumWidth": 3,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": "",
+          "ContainedObjects": [
+            {
+              "GUID": "633953",
+              "Name": "Card",
+              "Transform": {
+                "posX": 24.6820679,
+                "posY": 1.52606273,
+                "posZ": 24.7961464,
+                "rotX": 0.0,
+                "rotY": 180.0,
+                "rotZ": 0.0,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Complete the Counter-Ritual",
+              "Description": "Act 3",
+              "GMNotes": "{\n  \"id\": \"01122\",\n  \"type\": \"Act\",\n  \"clueThresholdPerInvestigator\": 2,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 232405,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2324": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "NumWidth": 3,
+                  "NumHeight": 2,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "633953",
+              "Name": "Card",
+              "Transform": {
+                "posX": 24.6820679,
+                "posY": 1.52606273,
+                "posZ": 24.7961464,
+                "rotX": 0.0,
+                "rotY": 180.0,
+                "rotZ": 0.0,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Ms. Warren's Fate",
+              "Description": "Act 2",
+              "GMNotes": "{\n  \"id\": \"01122\",\n  \"type\": \"Act\",\n  \"clueThresholdPerInvestigator\": 2,\n  \"victory\": 1,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 232404,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2324": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "NumWidth": 3,
+                  "NumHeight": 2,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "1c19e2",
+              "Name": "Card",
+              "Transform": {
+                "posX": 25.0107346,
+                "posY": 1.67121708,
+                "posZ": 24.5920124,
+                "rotX": 0.0,
+                "rotY": 180.0,
+                "rotZ": 0.0,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "The Haunting Begins",
+              "Description": "Act 1",
+              "GMNotes": "{\n  \"id\": \"01121a\",\n  \"type\": \"Act\",\n \"clueThresholdPerInvestigator\": 2,\n  \"victory\": 1,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 232403,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2324": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "NumWidth": 3,
+                  "NumHeight": 2,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            }
+          ]
+        },
+        {
+          "GUID": "c6f13f",
+          "Name": "Deck",
+          "Transform": {
+            "posX": -2.940001,
+            "posY": 1.61837292,
+            "posZ": 0.3930001,
+            "rotX": 3.941224E-08,
+            "rotY": 270.0,
+            "rotZ": -2.53215546E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Agenda Deck",
+          "Description": "",
+          "GMNotes": "",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": true,
+          "Hands": false,
+          "SidewaysCard": false,
+          "DeckIDs": [
+            232402,
+            232401,
+            232400
+          ],
+          "CustomDeck": {
+            "2324": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+              "NumWidth": 3,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": "",
+          "ContainedObjects": [
+            {
+              "GUID": "633954",
+              "Name": "Card",
+              "Transform": {
+                "posX": 24.6820679,
+                "posY": 1.52606273,
+                "posZ": 24.7961464,
+                "rotX": 0.0,
+                "rotY": 180.0,
+                "rotZ": 0.0,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Spiritual Chaos",
+              "Description": "Agenda 3",
+              "GMNotes": "{\n  \"id\": \"01122\",\n  \"type\": \"Agenda\",\n  \"doomThreshold\": 8,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 232402,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2324": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "NumWidth": 3,
+                  "NumHeight": 2,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "633954",
+              "Name": "Card",
+              "Transform": {
+                "posX": 24.6820679,
+                "posY": 1.52606273,
+                "posZ": 24.7961464,
+                "rotX": 0.0,
+                "rotY": 180.0,
+                "rotZ": 0.0,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Ghosts of the Past",
+              "Description": "Agenda 2",
+              "GMNotes": "{\n  \"id\": \"01122\",\n  \"type\": \"Agenda\",\n  \"doomThreshold\": 6,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 232401,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2324": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "NumWidth": 3,
+                  "NumHeight": 2,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            },
+            {
+              "GUID": "1c19e2",
+              "Name": "Card",
+              "Transform": {
+                "posX": -2.940001,
+                "posY": 1.78297269,
+                "posZ": 0.393,
+                "rotX": 4.31431181E-05,
+                "rotY": 179.999924,
+                "rotZ": 0.171061084,
+                "scaleX": 1.0,
+                "scaleY": 1.0,
+                "scaleZ": 1.0
+              },
+              "Nickname": "Uneasy Spirits",
+              "Description": "Agenda 1",
+              "GMNotes": "{\n  \"id\": \"01121a\",\n  \"type\": \"Agenda\",\n \"doomThreshold\": 4,\n  \"cycle\": \"Standalone\"\n}",
+              "AltLookAngle": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "ColorDiffuse": {
+                "r": 0.713235259,
+                "g": 0.713235259,
+                "b": 0.713235259
+              },
+              "Tags": [
+                "ScenarioCard"
+              ],
+              "LayoutGroupSortIndex": 0,
+              "Value": 0,
+              "Locked": false,
+              "Grid": true,
+              "Snap": true,
+              "IgnoreFoW": false,
+              "MeasureMovement": false,
+              "DragSelectable": true,
+              "Autoraise": true,
+              "Sticky": true,
+              "Tooltip": true,
+              "GridProjection": false,
+              "HideWhenFaceDown": true,
+              "Hands": true,
+              "CardID": 232400,
+              "SidewaysCard": false,
+              "CustomDeck": {
+                "2324": {
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "NumWidth": 3,
+                  "NumHeight": 2,
+                  "BackIsHidden": true,
+                  "UniqueBack": true,
+                  "Type": 0
+                }
+              },
+              "LuaScript": "",
+              "LuaScriptState": "",
+              "XmlUI": ""
+            }
+          ]
+        },
+        {
+          "GUID": "defc6a",
+          "Name": "Card",
+          "Transform": {
+            "posX": -23.6471844,
+            "posY": 1.53360486,
+            "posZ": 7.705916,
+            "rotX": -1.01567679E-07,
+            "rotY": 270.293274,
+            "rotZ": 8.073203E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Arkham Advertiser",
+          "Description": "Arkham. Northside.",
+          "GMNotes": "{\n  \"id\": \"01127\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Northside.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Square\",\n    \"connections\": \"Slash|Plus|Clover|Hourglass\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Square\",\n    \"connections\": \"Slash|Plus|Clover|Hourglass\",\n    \"uses\": [\n      {\n        \"count\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232300,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "f04bee",
+          "Name": "Card",
+          "Transform": {
+            "posX": -30.24,
+            "posY": 1.53351021,
+            "posZ": 7.650012,
+            "rotX": 0.00169500732,
+            "rotY": 270.0032,
+            "rotZ": 359.992554,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "O'Malley's Watch Shop",
+          "Description": "Arkham. Merchant District.",
+          "GMNotes": "{\n  \"id\": \"01131\",\n  \"type\": \"Location\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n\t\"traits\": \"Arkham. Merchant District.\",\n    \"icons\": \"Hourglass\",\n    \"connections\": \"Slash|Square|Triangle|Quote\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n\t]\n  },\n  \"locationBack\": {\n\t\"traits\": \"Merchant District. Speakeasy.\",\n    \"icons\": \"Hourglass\",\n    \"connections\": \"Slash|Square|Triangle|Quote\",\n    \"uses\": [\n      {\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "FlipRefill",
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232302,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        },
+        {
+          "GUID": "fc28a1",
+          "Name": "Card",
+          "Transform": {
+            "posX": -36.8400154,
+            "posY": 1.53360486,
+            "posZ": 7.65001726,
+            "rotX": 2.81004553E-09,
+            "rotY": 269.998962,
+            "rotZ": -2.05955324E-08,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "scaleZ": 1.0
+          },
+          "Nickname": "Orne Library",
+          "Description": "Arkham. Miskatonic University.",
+          "GMNotes": "{\n  \"id\": \"01125\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Miskatonic.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Quote\",\n    \"connections\": \"Slash|Hourglass|Moon|Heart|CrossAlt\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Quote\",\n    \"connections\": \"Slash|Hourglass|Moon|Heart|CrossAlt\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "AltLookAngle": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "ColorDiffuse": {
+            "r": 0.713235259,
+            "g": 0.713235259,
+            "b": 0.713235259
+          },
+          "Tags": [
+            "Location",
+            "ScenarioCard"
+          ],
+          "LayoutGroupSortIndex": 0,
+          "Value": 0,
+          "Locked": false,
+          "Grid": true,
+          "Snap": true,
+          "IgnoreFoW": false,
+          "MeasureMovement": false,
+          "DragSelectable": true,
+          "Autoraise": true,
+          "Sticky": true,
+          "Tooltip": true,
+          "GridProjection": false,
+          "HideWhenFaceDown": false,
+          "Hands": true,
+          "CardID": 232305,
+          "SidewaysCard": false,
+          "CustomDeck": {
+            "2323": {
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/Common/Common_Locations_Back.jpg",
+              "NumWidth": 4,
+              "NumHeight": 2,
+              "BackIsHidden": true,
+              "UniqueBack": true,
+              "Type": 0
+            }
+          },
+          "LuaScript": "",
+          "LuaScriptState": "",
+          "XmlUI": ""
+        }
+      ],
+      "AttachedDecals": [
+        {
+          "Transform": {
+            "posX": -0.0021877822,
+            "posY": -0.08963572,
+            "posZ": -0.00288731651,
+            "rotX": 270.0,
+            "rotY": 359.869568,
+            "rotZ": 0.0,
+            "scaleX": 2.00000215,
+            "scaleY": 2.00000238,
+            "scaleZ": 2.00000262
+          },
+          "CustomDecal": {
+            "Name": "dunwich_back",
+            "ImageURL": "http://cloud-3.steamusercontent.com/ugc/959719855119695911/931B9829687A20F4DEADB36DA57B7E6D76792231/",
+            "Size": 7.4
+          }
+        }
+      ]
+    }
+  ]
+}
