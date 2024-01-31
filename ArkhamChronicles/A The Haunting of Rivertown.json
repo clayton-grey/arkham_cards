@@ -139,7 +139,7 @@
               "Stretch": true
             }
           },
-          "LuaScript": "-- edit the \"tokenData\" table to change the preset difficulties\n-- list of valid ids: 'p1', '0', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8',\n--   'skull', 'cultist', 'tablet', 'elder', 'red', 'blue', 'bless', 'curse', 'frost'\n\nlocal tokenData = {\n  Easy = { 'p1', 'p1', '0', '0', '0', 'm1', 'm1', 'm1', 'm2', 'm2', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Standard = { 'p1', '0', '0', 'm1', 'm1', 'm1', 'm2', 'm2', 'm3', 'm4', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Hard = { '0', '0', '0', 'm1', 'm1', 'm2', 'm2', 'm3', 'm3', 'm4', 'm5', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Expert = { '0', 'm1', 'm1', 'm2', 'm2', 'm3', 'm3', 'm4', 'm4', 'm5', 'm6', 'm8', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n}\n\n-- create buttons on startup\nfunction onLoad()\n  local z_offset = -0.15\n  for difficulty, _ in pairs(tokenData) do\n    local clickFunction = difficulty:lower() .. \"Click\"\n    self.setVar(clickFunction, function() clickFun(difficulty) end)\n\n    self.createButton({\n      label = difficulty,\n      function_owner = self,\n      click_function = clickFunction,\n      position = { 0, 0.1, z_offset },\n      rotation = { 0, 0, 0 },\n      scale = { 0.47, 1, 0.47 },\n      height = 200,\n      width = 1150,\n      font_size = 100,\n      color = { 0.87, 0.8, 0.70 },\n      font_color = { 0, 0, 0 }\n    })\n    z_offset = z_offset + 0.20\n  end\nend\n\nfunction clickFun(difficulty)\n  Global.call(\"setChaosBagState\", tokenData[difficulty])\nend",
+          "LuaScript": "-- edit the \"tokenData\" table to change the preset difficulties\n-- list of valid ids: 'p1', '0', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8',\n--   'skull', 'cultist', 'tablet', 'elder', 'red', 'blue', 'bless', 'curse', 'frost'\n\nlocal tokenData = {\n  Easy = { 'p1', 'p1', '0', '0', '0', 'm1', 'm1', 'm1', 'm2', 'm2', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'red', 'blue' },\n  Standard = { 'p1', '0', '0', 'm1', 'm1', 'm1', 'm2', 'm2', 'm3', 'm4', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'elder', 'red', 'blue' },\n  Hard = { '0', '0', '0', 'm1', 'm1', 'm2', 'm2', 'm3', 'm3', 'm4', 'm5', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'elder', 'red', 'blue' },\n  Expert = { '0', 'm1', 'm1', 'm2', 'm2', 'm3', 'm3', 'm4', 'm4', 'm5', 'm6', 'm8', 'skull', 'skull', 'cultist', 'cultist', 'tablet', 'tablet', 'elder', 'elder', 'red', 'blue' },\n}\n\n-- create buttons on startup\nfunction onLoad()\n  local z_offset = -0.15\n  for difficulty, _ in pairs(tokenData) do\n    local clickFunction = difficulty:lower() .. \"Click\"\n    self.setVar(clickFunction, function() clickFun(difficulty) end)\n\n    self.createButton({\n      label = difficulty,\n      function_owner = self,\n      click_function = clickFunction,\n      position = { 0, 0.1, z_offset },\n      rotation = { 0, 0, 0 },\n      scale = { 0.47, 1, 0.47 },\n      height = 200,\n      width = 1150,\n      font_size = 100,\n      color = { 0.87, 0.8, 0.70 },\n      font_color = { 0, 0, 0 }\n    })\n    z_offset = z_offset + 0.20\n  end\nend\n\nfunction clickFun(difficulty)\n  Global.call(\"setChaosBagState\", tokenData[difficulty])\nend",
           "LuaScriptState": "",
           "XmlUI": ""
         },
@@ -230,7 +230,7 @@
               "Type": 0
             },
             "2318": {
-              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
               "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
               "NumWidth": 4,
               "NumHeight": 3,
@@ -1389,7 +1389,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1450,7 +1450,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1511,7 +1511,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1572,7 +1572,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1633,7 +1633,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1694,7 +1694,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1755,7 +1755,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1816,7 +1816,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -1877,7 +1877,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -2150,7 +2150,7 @@
               },
               "Nickname": "Ritual Servitor",
               "Description": "Spectral. Monster. Elite.",
-              "GMNotes": "{\n  \"id\": \"GRY0018\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Monster. Elite.\",\n  \"victory\": 2,\n  \"cycle\": \"Standalone\"\n}",
+              "GMNotes": "{\n  \"id\": \"GRY0018\",\n  \"type\": \"Enemy\",\n  \"class\": \"Mythos\",\n  \"traits\": \"Spectral. Monster. Elite.\",\n  \"victory\": 1,\n  \"cycle\": \"Standalone\"\n}",
               "AltLookAngle": {
                 "x": 0.0,
                 "y": 0.0,
@@ -2487,7 +2487,7 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2318": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Encounters_Front.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Encounters_Front.jpg",
                   "BackURL": "https://i.imgur.com/sRsWiSG.jpg/",
                   "NumWidth": 4,
                   "NumHeight": 3,
@@ -2549,8 +2549,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2325": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Locations_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Locations_Back.jpg",
                   "NumWidth": 2,
                   "NumHeight": 1,
                   "BackIsHidden": true,
@@ -2611,8 +2611,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2325": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Locations_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Locations_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Locations_Back.jpg",
                   "NumWidth": 2,
                   "NumHeight": 1,
                   "BackIsHidden": true,
@@ -2642,7 +2642,7 @@
           },
           "Nickname": "Arkham Asylum",
           "Description": "Arkham. Downtown.",
-          "GMNotes": "{\n  \"id\": \"01130\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Downtown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Plus\",\n    \"connections\": \"Square|Clover|Star\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Plus\",\n    \"connections\": \"Square|Clover|Star\",\n    \"uses\": [\n      {\n        \"count\": 3,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "GMNotes": "{\n  \"id\": \"01130\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Downtown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Plus\",\n    \"connections\": \"Square|Clover|Star\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Plus\",\n    \"connections\": \"Square|Clover|Star\",\n    \"victory\": 1,\n    \"uses\": [\n      {\n        \"count\": 3,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
           "AltLookAngle": {
             "x": 0.0,
             "y": 0.0,
@@ -2795,8 +2795,8 @@
           "SidewaysCard": false,
           "CustomDeck": {
             "2321": {
-              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Scenario_Card_Front.jpg",
-              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Scenario_Card_Back.jpg",
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Scenario_Card_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Scenario_Card_Back.jpg",
               "NumWidth": 1,
               "NumHeight": 1,
               "BackIsHidden": true,
@@ -2824,7 +2824,7 @@
           },
           "Nickname": "La Bella Luna",
           "Description": "Arkham. Downtown.",
-          "GMNotes": "{\n  \"id\": \"01127\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Downtown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Clover\",\n    \"connections\": \"Square|Plus|Star\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  },\n  \"locationBack\": {\n\t\"traits\": \"Arkham. Casino. Speakeasy.\",\n    \"icons\": \"Clover\",\n    \"connections\": \"Square|Plus|Star\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "GMNotes": "{\n  \"id\": \"01127\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Downtown.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Clover\",\n    \"connections\": \"Square|Plus|Star\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 1,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  },\n  \"locationBack\": {\n\t\"traits\": \"Arkham. Casino. Speakeasy.\",\n    \"icons\": \"Clover\",\n    \"connections\": \"Square|Plus|Star\",\n    \"victory\": 1,\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
           "AltLookAngle": {
             "x": 0.0,
             "y": 0.0,
@@ -2974,7 +2974,7 @@
           "HideWhenFaceDown": false,
           "Hands": false,
           "CustomPDF": {
-            "PDFUrl": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/b152b2cf82f7776ae61f2c886ca201ffb50b67aa/ArkhamChronicles/ArkhamHorror_Arkham%20Chronicles_75x75_CampaignGuide_WithBleed_v1.pdf",
+            "PDFUrl": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/7dec50ed7533fc4059ef51904aca0c8433d5e8d2/ArkhamChronicles/ArkhamHorror_Arkham%20Chronicles_75x75_CampaignGuide_NoBleed_v1.1.pdf",
             "PDFPassword": "",
             "PDFPage": 0,
             "PDFPageOffset": 0
@@ -3032,8 +3032,8 @@
           ],
           "CustomDeck": {
             "2324": {
-              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
               "NumWidth": 3,
               "NumHeight": 2,
               "BackIsHidden": true,
@@ -3093,8 +3093,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2324": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
                   "NumWidth": 3,
                   "NumHeight": 2,
                   "BackIsHidden": true,
@@ -3154,8 +3154,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2324": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
                   "NumWidth": 3,
                   "NumHeight": 2,
                   "BackIsHidden": true,
@@ -3215,8 +3215,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2324": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
                   "NumWidth": 3,
                   "NumHeight": 2,
                   "BackIsHidden": true,
@@ -3279,8 +3279,8 @@
           ],
           "CustomDeck": {
             "2324": {
-              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+              "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+              "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
               "NumWidth": 3,
               "NumHeight": 2,
               "BackIsHidden": true,
@@ -3340,8 +3340,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2324": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
                   "NumWidth": 3,
                   "NumHeight": 2,
                   "BackIsHidden": true,
@@ -3401,8 +3401,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2324": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
                   "NumWidth": 3,
                   "NumHeight": 2,
                   "BackIsHidden": true,
@@ -3462,8 +3462,8 @@
               "SidewaysCard": false,
               "CustomDeck": {
                 "2324": {
-                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Front.jpg",
-                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/S1/S1_Agendas_Acts_Back.jpg",
+                  "FaceURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Front.jpg",
+                  "BackURL": "https://raw.githubusercontent.com/clayton-grey/arkham_cards/main/ArkhamChronicles/SA/SA_Agendas_Acts_Back.jpg",
                   "NumWidth": 3,
                   "NumHeight": 2,
                   "BackIsHidden": true,
@@ -3618,7 +3618,7 @@
           },
           "Nickname": "Orne Library",
           "Description": "Arkham. Miskatonic University.",
-          "GMNotes": "{\n  \"id\": \"01125\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Miskatonic.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Quote\",\n    \"connections\": \"Slash|Hourglass|Moon|Heart|CrossAlt\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Quote\",\n    \"connections\": \"Slash|Hourglass|Moon|Heart|CrossAlt\",\n    \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
+          "GMNotes": "{\n  \"id\": \"01125\",\n  \"type\": \"Location\",\n  \"traits\": \"Arkham. Miskatonic.\",\n  \"cycle\": \"Standalone\",\n  \"locationFront\": {\n    \"icons\": \"Quote\",\n    \"connections\": \"Slash|Hourglass|Moon|Heart|CrossAlt\"\n  },\n  \"locationBack\": {\n    \"icons\": \"Quote\",\n    \"connections\": \"Slash|Hourglass|Moon|Heart|CrossAlt\",\n     \"victory\": 1,\n     \"uses\": [\n      {\n        \"countPerInvestigator\": 2,\n        \"type\": \"Clue\",\n        \"token\": \"clue\"\n      }\n    ]\n  }\n}",
           "AltLookAngle": {
             "x": 0.0,
             "y": 0.0,
